@@ -5,7 +5,7 @@
   	<meta http-equiv="content-type" content="text/html; charset=utf-8">
   	<link rel="canonical" href="/blogposts/animated-choropleths/index.html" />
 	<meta name="description" content="" />
-	<meta property="og:description" content="This post is motivated by a recent article by Vivek Patil, where he showed various ways to generate and animate choropleth maps from R. Here is the end result that we are shooting for :)" />
+	<meta property="og:description" content="Chropleths have always fascinated me since they allow one to visualize trends in spatial data. This post is a short demonstration on how to create interactive, animated choropleths using rMaps, DataMaps and AngularJS" />
 	<meta itemprop="image" content="map1.jpg" />
 	<meta property="og:image" content="map1.jpg" />
 	<meta property="og:title" content="Animated Choropleths" />
@@ -53,7 +53,7 @@
   </a>
 </div>
 	    <div id="post-info">
-        2014-01-31
+        2014-02-06
 		    <h1>Animated Choropleths</h1>
 		    <!-- <a class="site-title" href="/blog">
 			    <img src="/assets/images/slidify_logo_small.png" class="site-icon-small">
@@ -69,7 +69,11 @@
     </header>
     <div id="article">
 	    
-<p>This post is motivated by a recent article by Vivek Patil, where he showed various ways to generate and animate choropleth maps from R. Here is the end result that we are shooting for :)</p>
+<p>The dataset and maps used in this post are motivated by a <a href="http://www.analyticsandvisualization.com/2014/01/animated-choropleths-using-animation.html">recent article</a> by <a href="http://github.com/patilv">Vivek Patil</a>, where he showed various ways to generate and animate choropleth maps from R. </p>
+
+<p>In this post, I will demonstrate a step-by-step approach to creating an animated, interactive choropleth map using rMaps and  <a href="http://datamaps.github.io">DataMaps</a>. I will also show how the entire sequence of steps can be combined into a simple function, that would allow the same choropleth to be generated with a single line of R code!</p>
+
+<p>Before we go ahead, here is what we are shooting for.</p>
 
 <hr/>
 
@@ -81,7 +85,7 @@
 <hr/>
 
 <h2>Get Data</h2>
-<p>Let us fetch data from <a href="http://www.quandl.com/">Quandl</a>, which is an excellent source of fascinating datasets. I would strongly recommend that you check it out, if you haven&#39;t already :). </p>
+<p>The first step to creating any visualization is getting the data. Let us fetch time-series data on violet crime in the US, from <a href="http://www.quandl.com/">Quandl</a>, which is an excellent source of fascinating datasets. I would strongly recommend that you check it out, if you haven&#39;t already :). </p>
 
 <pre><code class="r">library(Quandl)
 vcData = Quandl(&quot;FBI_UCR/USCRIME_TYPE_VIOLENTCRIMERATE&quot;)
@@ -172,9 +176,11 @@ kable(head(vcData[,1:9]), format = &#39;html&#39;, table.attr = &quot;class=nofl
 </tbody>
 </table>
 
+<p>Now that we have our data, we need to process it so that it is in the right shape for us to visualize it. In my (limited) experience, this step of getting the data in the right shape is the most challenging part of the visualization process, and can easily consume 50-60% of the overall effort.</p>
+
 <h2>Reshape Data</h2>
 
-<p>Our dataset is in the wide-form. So let us first convert it into the long-form, as it is usually more convenient for visualization purposes. We remove data for the US as a whole, as well as for DC, so that the crime rates are comparable. </p>
+<p>Our dataset is in the wide-form. So, our first step is to convert it into the long-form, as it is usually more convenient for visualization purposes. Additionally, we remove data for the US as a whole, as well as for DC, so that the crime rates across entities (states) are comparable. </p>
 
 <pre><code class="r">library(reshape2)
 datm &lt;- melt(vcData, &#39;Year&#39;, 
@@ -230,7 +236,7 @@ kable(head(datm), format = &#39;html&#39;, table.attr = &quot;class=nofluid&quot
 </table>
 
 <h2>Discretize Crime Rates</h2>
-<p>For choropleth maps, we would like to discretize crime rates. We do this by dividing crime rates into sextiles. </p>
+<p>Crime rates are continuous numbers and so we first need to discretize them. One way to do this is to  divide them into sextiles.</p>
 
 <pre><code class="r">datm2 &lt;- transform(datm,
   State = state.abb[match(as.character(State), state.name)],
@@ -289,8 +295,10 @@ kable(head(datm2), format = &#39;html&#39;, table.attr = &quot;class=nofluid&quo
 </tbody>
 </table>
 
-<h2>Choose Fill Colors</h2>
-<p>We use <a href="http://colorbrewer2.org/">ColorBrewer</a> to choose a palette for our choropleth map. The colors are mapped to the <code>fillKey</code> that we created earlier. We also set a <code>defaultFill</code>, which is used by <code>datamaps</code> to fill entities with no <code>fillKey</code> data.</p>
+<p>Now that we have discretized crime rates, we need to associate each sextile with a fill color chosen from a palette.</p>
+
+<h2>Associate Fill Colors</h2>
+<p>We use the excellent <a href="http://colorbrewer2.org">colorbrewer</a> palettes provided by the <a href="http://cran.r-project.org/web/packages/RColorBrewer/index.html">RColorBrewer</a> package!. The colors are mapped to the <code>fillKey</code> that we created earlier. We also set a <code>defaultFill</code>, which is used by <code>datamaps</code> to fill entities with no <code>fillKey</code> data.</p>
 
 <pre><code class="r">fills = setNames(
   c(RColorBrewer::brewer.pal(5, &#39;YlOrRd&#39;), &#39;white&#39;),
@@ -298,10 +306,12 @@ kable(head(datm2), format = &#39;html&#39;, table.attr = &quot;class=nofluid&quo
 )
 </code></pre>
 
+<p>We have one final step before we can start visualizing the data.</p>
+
 <h2>Create Payload for DataMaps</h2>
-<pre><code class="r">library(plyr)
-library(rCharts)
-options(rcharts.cdn = TRUE)
+<p>The data frame needs to be converted into a list of lists, as it is the default data structure that the <a href="http://datamaps.github.io">DataMaps</a> library accepts. Thanks to <a href="http://had.co.nz">Hadley&#39;s</a> <code>plyr</code> package, this only requires a few lines of code.</p>
+
+<pre><code class="r">library(plyr); library(rCharts)
 dat2 &lt;- dlply(na.omit(datm2), &quot;Year&quot;, function(x){
   y = toJSONArray2(x, json = F)
   names(y) = lapply(y, &#39;[[&#39;, &#39;State&#39;)
@@ -309,8 +319,13 @@ dat2 &lt;- dlply(na.omit(datm2), &quot;Year&quot;, function(x){
 })
 </code></pre>
 
+<p>After all the hard work (phew!), we are finally ready to start visualizing our data.</p>
+
 <h2>Create Simple Choropleth</h2>
-<pre><code class="r">map &lt;- Datamaps$new()
+<p>Let us first create a simple choropleth map of crime rates for a given year. We use the <code>Datamaps</code> reference class, which provides us with simple bindings to the DataMaps library. The code below is fairly self-explanatory.</p>
+
+<pre><code class="r">options(rcharts.cdn = TRUE)
+map &lt;- Datamaps$new()
 map$set(
   dom = &#39;chart_1&#39;,
   scope = &#39;usa&#39;,
@@ -332,7 +347,13 @@ chart_1
 
 <style>iframe.rChart{ width: 100%; height: 400px;}</style>
 
+<p>Having visualized the data for a specific year, the challenge now is to be able to visualize the entire time series. We have several options to do this. One option is to throw this into a <a href="http://www.rstudio.com/shiny">Shiny</a> application, which controls the visualization from the server side. The other option is to integrate this with an MVC framework like <a href="http://angularjs.org">AngularJS</a> so that all interactivity occurs on the client (read browser!) side. We will explore the second option.</p>
+
 <h2>Animated Choropleth</h2>
+<p>The next few lines of code might look very cryptic to those of you who are not familiar with javascript. But bear with me, and I will try my best to explain it in simpler terms. </p>
+
+<p>Our first step here is to add the requisite javascript files to the page and designate it as an AngularJS application, to be controlled by a javascript function named <code>rChartsCtrl</code>.</p>
+
 <pre><code class="r">map2 = map$copy()
 map2$set(
   bodyattrs = &quot;ng-app ng-controller=&#39;rChartsCtrl&#39;&quot;
@@ -340,8 +361,11 @@ map2$set(
 map2$addAssets(
   jshead = &quot;http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.1/angular.min.js&quot;
 )
+</code></pre>
 
-map2$setTemplate(chartDiv = sprintf(&quot;
+<p>We then invoke the <code>setTemplate</code> method to modify the default layout in the rCharts template. There are two parts to the modified layout. The first is a <code>div</code> container to hold the map and a slider to control the year. Second, is an <code>rChartsCtrl</code> function that specifies how to update the map when the user interacts the the slider.</p>
+
+<pre><code class="r">map2$setTemplate(chartDiv = sprintf(&quot;
   &lt;div class=&#39;container&#39;&gt;
     &lt;input id=&#39;slider&#39; type=&#39;range&#39; min=1960 max=2010 ng-model=&#39;year&#39; width=200&gt; %s
     &lt;div id=&#39;&#39; class=&#39;rChart datamaps&#39;&gt;&lt;/div&gt;  
@@ -355,7 +379,13 @@ map2$setTemplate(chartDiv = sprintf(&quot;
     }
   &lt;/script&gt;&quot;, &quot;&quot;)
 )
-map2$set(newData = dat2)
+</code></pre>
+
+<p>AngularJS makes it really easy to create two-way data bindings. Let me explain how this code works. The <code>input</code> element on the page is a slider input, whose value is bound to the variable <code>year</code>. <code>rChartsCtrl</code> identifies this variable as <code>$scope.year</code> and they are always in sync. </p>
+
+<p>When the user slides the slider, the value of <code>year</code> changes. <code>rChartsCtrl</code> watches for changes in value of <code>year</code> and when it does change, it calls the <code>updateChoropleth</code> function to update the map. </p>
+
+<pre><code class="r">map2$set(newData = dat2)
 map2
 </code></pre>
 
@@ -369,39 +399,64 @@ chart_1
 
 <style>iframe.rChart{ width: 100%; height: 400px;}</style>
 
-<h2>AutoPlay</h2>
-<p>Now suppose, we want to provide the user with a play button that would automatically animate the choropleth map. We can use a bit of AngularJS magic again and achieve this by using the code below.</p>
+<p>Note that you can easily modify my code to get a dropdown menu of the years. You can also get very fancy and use an enhanced slider like <a href="http://prajwalkman.github.io/angular-slider/">this one here</a>.  </p>
 
-<pre><code class="html">&lt;div class=&#39;container&#39;&gt;
-  &lt;button ng-click=&#39;animateMap()&#39;&gt;Play&lt;/button&gt;
-  &lt;div id=&#39;chart_1&#39; class=&#39;rChart datamaps&#39;&gt;&lt;/div&gt;  
-&lt;/div&gt;
-&lt;script&gt;
-  function rChartsCtrl($scope, $timeout){
-    $scope.year = 1960;
-    $scope.animateMap = function(){
-      if ($scope.year &gt; 2010){
-        return;
-      }
-      mapchart_1.updateChoropleth(chartParams.newData[$scope.year]);
-      $scope.year += 1
-      $timeout($scope.animateMap, 1000)
-    }
-  }
-&lt;/script&gt;
-</code></pre>
+<h2>AutoPlay</h2>
+<p>Now suppose, we want to provide the user with a play button that would automatically animate the choropleth map. We can use a bit of AngularJS magic again and achieve this using the code below. In short, we create an <code>animateMap</code> function that automatically updates the <code>year</code> every 1000 milliseconds, and also updates the choropleth. I added a few more enhancements (not shown in the code) to get the nice play button and continuous legend on top.</p>
 
 <pre><code class="r">map3 = map2$copy()
+map3$setTemplate(chartDiv = &quot;
   &lt;div class=&#39;container&#39;&gt;
+    &lt;button ng-click=&#39;animateMap()&#39;&gt;Play&lt;/button&gt;
+    &lt;div id=&#39;chart_1&#39; class=&#39;rChart datamaps&#39;&gt;&lt;/div&gt;  
+  &lt;/div&gt;
+  &lt;script&gt;
+    function rChartsCtrl($scope, $timeout){
+      $scope.year = 1960;
+      $scope.animateMap = function(){
+        if ($scope.year &gt; 2010){
+          return;
+        }
+        mapchart_1.updateChoropleth(chartParams.newData[$scope.year]);
+        $scope.year += 1
+        $timeout($scope.animateMap, 1000)
+      }
+    }
+  &lt;/script&gt;&quot;
+)
+map3
 </code></pre>
 
 <iframe src='fig/autochoro.html' scrolling='no' seamless class='rChart datamaps' id='iframe-chart_4'></iframe>
+
+<p>Now you might be thinking that while all this is nice, it still involves writing a lot of code, and more importantly being able to write code in javascript. My primary intention behind presenting all these steps was to show you the flexibility of rMaps, in being able to absorb custom js code. However, it is easy to wrap all of what I did into a simple <a href="ichoropleth.R"><code>ichoropleth</code></a> function that can do all of this in one line of R code.</p>
+
+<pre><code class="r">source(&#39;ichoropleth.R&#39;)
+ichoropleth(Crime ~ State,
+  data = datm2[,1:3],
+  pal = &#39;PuRd&#39;,
+  ncuts = 5,
+  animate = &#39;Year&#39;
+)
+</code></pre>
+
+<iframe src='
+fig/ichropleth.html
+' scrolling='no' seamless
+class='rChart datamaps '
+id=iframe-
+chart512a952a513
+></iframe>
+
+<style>iframe.rChart{ width: 100%; height: 400px;}</style>
 
 <style>
   #iframe-chart_4 {height: 550px;}
   iframe.rChart {height: 500px;} 
   table.nofluid {width: auto; margin: 0 auto;}
   pre {margin-left: 0px;}
+  code {padding-left: 0px;}
+  p {text-align: justify;}
 </style>
 
       <div class='share' style='margin-top:30px;'></div>
