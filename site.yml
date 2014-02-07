@@ -42,10 +42,10 @@ social:
     
 menu:
   - title:	Home
-    url:	http://github.com/ramnathv
+    url:	'/blog'
     
   - title:	About
-    url:	/poirot/about/
+    url:	/blog/about/
     
 copyright:
   author:	Ramnath Vaidyanathan
