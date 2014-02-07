@@ -399,7 +399,18 @@ chart_1
 
 <style>iframe.rChart{ width: 100%; height: 400px;}</style>
 
-<p>Note that you can easily modify my code to get a <a href="fig/animated_choro2.html">dropdown menu</a> of the years, or display them as <a href="fig/animated_choro2.html">select button groups</a>. You can also get very fancy and use an enhanced slider like <a href="http://prajwalkman.github.io/angular-slider/">this one here</a>.  </p>
+<p>Note that you can easily modify my code to display the year controls as a dropdown menu or select button group <a href="fig/animated_choro2.html">dropdown menu</a> of the years, or display them as <a href="fig/animated_choro2.html">select button groups</a>. You can also get very fancy and use an enhanced slider like <a href="http://prajwalkman.github.io/angular-slider/">this one here</a>.  </p>
+
+<p><strong>Dropdown</strong></p>
+
+<iframe src='fig/animated_choro2.html' scrolling='no' seamless class='rChart datamaps ' 
+  id=iframe-chart_5a></iframe>
+  
+
+<p><strong>Button Groups</strong></p>
+
+<iframe src='fig/animated_choro3.html' scrolling='no' seamless class='rChart datamaps ' 
+  id=iframe-chart_5a></iframe>
 
 <h2>AutoPlay</h2>
 <p>Now suppose, we want to provide the user with a play button that would automatically animate the choropleth map. We can use a bit of AngularJS magic again and achieve this using the code below. In short, we create an <code>animateMap</code> function that automatically updates the <code>year</code> every 1000 milliseconds, and also updates the choropleth. I added a few more enhancements (not shown in the code) to get the nice play button and continuous legend on top.</p>

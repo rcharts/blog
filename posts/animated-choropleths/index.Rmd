@@ -183,7 +183,18 @@ map2$set(newData = dat2)
 map2
 ```
 
-Note that you can easily modify my code to get a [dropdown menu](fig/animated_choro2.html) of the years, or display them as [select button groups](fig/animated_choro2.html). You can also get very fancy and use an enhanced slider like [this one here](http://prajwalkman.github.io/angular-slider/).  
+Note that you can easily modify my code to display the year controls as a dropdown menu or select button group [dropdown menu](fig/animated_choro2.html) of the years, or display them as [select button groups](fig/animated_choro2.html). You can also get very fancy and use an enhanced slider like [this one here](http://prajwalkman.github.io/angular-slider/).  
+
+__Dropdown__
+
+<iframe src='fig/animated_choro2.html' scrolling='no' seamless class='rChart datamaps ' 
+  id=iframe-chart_5a></iframe>
+  
+  
+__Button Groups__
+
+<iframe src='fig/animated_choro3.html' scrolling='no' seamless class='rChart datamaps ' 
+  id=iframe-chart_5a></iframe>
 
 ---
 
