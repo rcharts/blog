@@ -10,7 +10,7 @@ title:		Ramnath
 tagline:	'blog'
 description:	'Random Ramblings'
 url:		"/blog"
-baseurl: ""
+baseurl: "/blog"
 
 author:
   name:		'Ramnath Vaidyanathan'
