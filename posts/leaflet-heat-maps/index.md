@@ -9,6 +9,7 @@ mode: selfcontained
 url: {lib: ../../libraries}
 image: crime_map.png
 date: "2014-02-08"
+description: This is a short post on how to use rCharts 
 ---
 
 

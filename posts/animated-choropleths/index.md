@@ -392,7 +392,7 @@ chart_1
 <style>iframe.rChart{ width: 100%; height: 400px;}</style>
 
 
-Note that you can easily modify my code to get a dropdown menu of the years. You can also get very fancy and use an enhanced slider like [this one here](http://prajwalkman.github.io/angular-slider/).  
+Note that you can easily modify my code to get a [dropdown menu](fig/animated_choro2.html) of the years, or display them as [select button groups](fig/animated_choro2.html). You can also get very fancy and use an enhanced slider like [this one here](http://prajwalkman.github.io/angular-slider/).  
 
 ---
 
